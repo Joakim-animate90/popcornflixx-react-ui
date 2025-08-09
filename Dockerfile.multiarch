@@ -1,30 +1,31 @@
-# Multi-stage build for React frontend
+# Alternative Dockerfile with ARM64 support
 FROM node:18-alpine AS build
 
-# Install curl for healthcheck in final stage
-RUN apk add --no-cache curl
+# Install dependencies for native builds
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    curl
 
 # Set working directory
 WORKDIR /app
 
-# Set npm configuration for better compatibility
-ENV npm_config_cache=/tmp/.npm
-ENV npm_config_fund=false
-ENV npm_config_audit=false
-
 # Copy package files first for better layer caching
 COPY client/package*.json ./
 
-# Clean install with specific npm version to avoid issues
-RUN npm install -g npm@10.8.2 && \
-    npm ci && \
+# Install dependencies with retry and ARM64 fixes
+RUN npm config set target_arch $(uname -m) && \
+    npm config set target_platform linux && \
+    npm config set cache /tmp/.npm && \
+    npm ci --verbose && \
     npm cache clean --force
 
 # Copy source code
 COPY client/ ./
 
-# Build the application
-RUN npm run build
+# Build the application with retry mechanism
+RUN npm run build || (rm -rf node_modules && npm ci && npm run build)
 
 # Production stage with Nginx
 FROM nginx:alpine
@@ -37,12 +38,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
-
-# Create nginx user and set permissions
-RUN addgroup -g 101 -S nginx && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
