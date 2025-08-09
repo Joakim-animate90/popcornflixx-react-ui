@@ -1,0 +1,42 @@
+.dashboard {
+  display: grid;
+  place-items: center;
+}
+
+.welcome {
+  font-family: 'Lato';
+  font-size: 2.1vw;
+  margin: 30px 0;
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.name {
+  color: azure;
+  text-decoration: underline;
+}
+
+.section-heading {
+  font-family: 'Source Sans Pro';
+  color: var(--primary-color);
+  border-bottom: 0.5px solid var(--primary-color);
+  width: 80vw;
+  text-transform: uppercase;
+}
+
+.popular-container, .activity-container {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: 1fr 1fr;
+  width: 80vw;
+  margin: 20px 0;
+}
+
+.activity-container {
+  grid-template-rows: 1fr;
+}
+
+.bolt {
+  font-size: 0.8rem;
+}

@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Raleway:wght@600&family=Lato:wght@700&family=Open+Sans:wght@600&family=Roboto:wght@400&family=Source+Sans+Pro:wght@400&family=Noto+Sans:wght@400&family=Poppins:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@900&family=Roboto:wght@100;400&display=swap');
+/*
+  Montserrat 
+    Where to use: Headers, Titles, Emphasis text
+    Default style: font-weight: 700
+
+  Raleway 
+    Where to use: Subheaders, Highlighted text
+    Default style: font-weight: 600
+
+  Lato 
+    Where to use: Emphasis text, Buttons, Call-to-action elements
+    Default style: font-weight: 700
+
+  Open Sans 
+    Where to use: Paragraphs, Main content
+    Default style: font-weight: 600
+
+  Roboto 
+    Where to use: General text, Body text, Forms
+    Default style: font-weight: 400
+
+  Source Sans Pro 
+    Where to use: Content blocks, Subtext, Footers
+    Default style: font-weight: 400
+
+  Noto Sans 
+    Where to use: Multilingual text, Accessibility elements
+    Default style: font-weight: 400
+
+  Poppins 
+    Where to use: Captions, Highlights, Labels
+    Default style: font-weight: 500
+
+  Merriweather 
+    Where to use: Article titles, Block quotes, Emphasis text
+    Default style: font-weight: 900
+*/
+
+:root {
+  --background-color: #14181c;
+  --primary-color: #678;
+  --secondary-color: whitesmoke;
+
+  /* Form Colors*/
+  --form-bg-color: #101316;
+  --input-bg-color: #2c3440;
+  --input-bg-color-focus: aliceblue;
+
+  /* Button Colors */
+  --button-color: #00ac1c;
+  --button-color-hover: #009d1a;
+
+  --sprite-url: url('https://s.ltrbxd.com/static/img/content-bg.2f106e08.png');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--background-color) var(--sprite-url) 0 -1px repeat-x;
+  color: var(--primary-color);
+}
+
+.form-container {
+  display: grid;
+  height: 85vh;
+  place-items: center;
+}
+
+form {
+  width: 30vw;
+  display: grid;
+  background-color: var(--form-bg-color);
+  padding: 40px 50px;
+  border-radius: 10px;
+}
+
+form > h1 {
+  font-family: 'Montserrat';
+  margin-bottom: 10px;
+}
+
+label {
+  font-family: 'Poppins', sans-serif;
+}
+
+input {
+  font-size: 1.05rem;
+  height: 30px;
+  border: none;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: var(--input-bg-color);
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+input:focus {
+  background-color: var(--input-bg-color-focus);
+}
+
+button {
+  font-family: 'Poppins', sans-serif;
+  color: var(--secondary-color);
+  background-color: var(--button-color);
+  box-shadow: inset 0 1px 0 hsla(0, 0%, 100%, 0.3);
+  border: none;
+  padding: 1vh 1.5vw;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 1.05rem;
+}
+
+button:hover {
+  background-color: var(--button-color-hover);
+}

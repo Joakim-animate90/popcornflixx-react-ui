@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Install dependencies
+      run: |
+        cd client
+        npm ci
+
+    - name: Bump version
+      id: version
+      run: |
+        cd client
+        NEW_VERSION=$(npm version ${{ github.event.inputs.version_type }} --no-git-tag-version)
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "version_number=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+
+    - name: Update root package.json version
+      run: |
+        VERSION="${{ steps.version.outputs.version_number }}"
+        sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+
+    - name: Run tests and build
+      run: |
+        cd client
+        npm run lint
+        npm run build
+
+    - name: Commit version bump
+      run: |
+        git add .
+        git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+        git tag ${{ steps.version.outputs.new_version }}
+
+    - name: Push changes
+      run: |
+        git push origin main
+        git push origin ${{ steps.version.outputs.new_version }}
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.new_version }}
+        release_name: Release ${{ steps.version.outputs.new_version }}
+        draft: false
+        prerelease: false
+        body: |
+          ## Changes in ${{ steps.version.outputs.new_version }}
+          
+          This release was automatically created by GitHub Actions.
+          
+          ### Docker Images
+          - `ghcr.io/joakim-animate90/popcornflix-frontend:${{ steps.version.outputs.version_number }}`
+          - `ghcr.io/joakim-animate90/popcornflix-frontend:latest`
