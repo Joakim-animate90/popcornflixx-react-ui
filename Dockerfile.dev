@@ -1,5 +1,5 @@
 # Development Dockerfile
-FROM node:18-alpine as development
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
