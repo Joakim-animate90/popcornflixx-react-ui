@@ -1,0 +1,112 @@
+name: Security Scan
+
+on:
+  workflow_run:
+    workflows: ["Build and Deploy Frontend"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to scan (e.g., latest, 1.0.0)'
+        required: false
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: joakim-animate90/popcornflix-frontend
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+
+    steps:
+    - name: Set image tag
+      id: set-tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG="${{ github.event.inputs.image_tag }}"
+        else
+          TAG="latest"
+        fi
+        echo "image-tag=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG" >> $GITHUB_OUTPUT
+        echo "Scanning image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG"
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Pull image for scanning
+      run: |
+        docker pull ${{ steps.set-tag.outputs.image-tag }}
+
+    - name: Run Trivy vulnerability scanner (SARIF)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ steps.set-tag.outputs.image-tag }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        exit-code: '0'
+      continue-on-error: true
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Trivy vulnerability scanner (Table format)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ steps.set-tag.outputs.image-tag }}
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '0'
+      continue-on-error: true
+
+    - name: Generate security report
+      run: |
+        echo "# Security Scan Report" > security-report.md
+        echo "**Image:** ${{ steps.set-tag.outputs.image-tag }}" >> security-report.md
+        echo "**Scan Date:** $(date)" >> security-report.md
+        echo "" >> security-report.md
+        
+        # Run Trivy and capture output
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $PWD:/tmp aquasec/trivy:latest image \
+          --format json --severity CRITICAL,HIGH \
+          ${{ steps.set-tag.outputs.image-tag }} > trivy-results.json || true
+        
+        # Count vulnerabilities
+        CRITICAL=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL") | .VulnerabilityID' trivy-results.json 2>/dev/null | wc -l || echo "0")
+        HIGH=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH") | .VulnerabilityID' trivy-results.json 2>/dev/null | wc -l || echo "0")
+        
+        echo "**Summary:**" >> security-report.md
+        echo "- Critical vulnerabilities: $CRITICAL" >> security-report.md
+        echo "- High vulnerabilities: $HIGH" >> security-report.md
+        echo "" >> security-report.md
+        
+        if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+          echo "⚠️ Vulnerabilities found. Please review the Security tab for details." >> security-report.md
+        else
+          echo "✅ No critical or high vulnerabilities found." >> security-report.md
+        fi
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: |
+          security-report.md
+          trivy-results.json
+          trivy-results.sarif
+        retention-days: 30

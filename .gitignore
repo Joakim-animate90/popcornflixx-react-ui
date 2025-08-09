@@ -224,3 +224,9 @@ docker-compose.override.yml
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Security scan reports
+trivy-report.json
+trivy-results.json
+trivy-results.sarif
+security-report.md

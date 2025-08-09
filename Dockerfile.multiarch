@@ -1,31 +1,36 @@
 # Alternative Dockerfile with ARM64 support
 FROM node:18-alpine AS build
 
-# Install dependencies for native builds
+# Install dependencies for native builds and debugging
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    curl
+    curl \
+    libc6-compat
 
 # Set working directory
 WORKDIR /app
 
+# Set npm configuration for better compatibility
+ENV npm_config_cache=/tmp/.npm
+ENV npm_config_fund=false
+ENV npm_config_audit=false
+ENV npm_config_update_notifier=false
+
 # Copy package files first for better layer caching
 COPY client/package*.json ./
 
-# Install dependencies with retry and ARM64 fixes
-RUN npm config set target_arch $(uname -m) && \
-    npm config set target_platform linux && \
-    npm config set cache /tmp/.npm && \
-    npm ci --verbose && \
+# Install dependencies with ARM64 compatibility
+RUN npm install -g npm@10.8.2 && \
+    npm ci && \
     npm cache clean --force
 
 # Copy source code
 COPY client/ ./
 
-# Build the application with retry mechanism
-RUN npm run build || (rm -rf node_modules && npm ci && npm run build)
+# Build the application with fallback
+RUN npm run build
 
 # Production stage with Nginx
 FROM nginx:alpine
