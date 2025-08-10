@@ -15,7 +15,7 @@ const clearTokens = () => {
 
 // Axios API client with set configuration
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api`,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
         const refreshToken = getRefreshToken();
         if (refreshToken) {
           const response = await axios.post(
-            'http://localhost:8000/api/auth/token/refresh/',
+            `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/token/refresh/`,
             { refresh: refreshToken }
           );
           

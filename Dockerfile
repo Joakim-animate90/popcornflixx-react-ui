@@ -7,10 +7,12 @@ RUN apk add --no-cache curl
 # Set working directory
 WORKDIR /app
 
-# Set npm configuration for better compatibility
+# Set npm configuration and environment variables
 ENV npm_config_cache=/tmp/.npm
 ENV npm_config_fund=false
 ENV npm_config_audit=false
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 # Copy package files first for better layer caching
 COPY client/package*.json ./

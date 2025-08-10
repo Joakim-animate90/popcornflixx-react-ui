@@ -9,6 +9,7 @@ services:
       - "3000:80"
     environment:
       - NODE_ENV=production
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -28,6 +29,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
     command: npm run dev -- --host 0.0.0.0
     profiles:
       - dev
