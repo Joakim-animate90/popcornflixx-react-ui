@@ -32,7 +32,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 // Axios API client with set configuration
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_BASE_URL}`,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ apiClient.interceptors.response.use(
         const refreshToken = getRefreshToken();
         if (refreshToken) {
           const response = await axios.post(
-            `${API_BASE_URL}/api/auth/token/refresh/`,
+            `${API_BASE_URL}/auth/token/refresh/`,
             { refresh: refreshToken }
           );
           
