@@ -37,7 +37,7 @@ const AuthService = {
   logout: async () => {
     try {
       const response = await apiClient.post('/user/logout');
-      
+
       // Clear stored tokens and user data
       clearTokens();
       

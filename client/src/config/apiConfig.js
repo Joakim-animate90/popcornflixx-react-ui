@@ -15,13 +15,13 @@ const clearTokens = () => {
 
 // Environment configuration
 const getApiBaseUrl = () => {
-  // For build-time environment variables in React
+  // For build-time environment variables in Vite
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
   
   // Default fallbacks based on environment
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.MODE === 'production') {
     return '/api'; // Relative URL for production (assumes same domain)
   }
   
@@ -30,9 +30,9 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Axios API client with set configuration
+// Axios API client with set configuration  
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}`,
+  baseURL: API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
@@ -65,10 +65,10 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = getRefreshToken();
         if (refreshToken) {
-          const response = await axios.post(
-            `${API_BASE_URL}/auth/token/refresh/`,
-            { refresh: refreshToken }
-          );
+          const refreshUrl = API_BASE_URL.endsWith('/api') ? 
+            `${API_BASE_URL}/auth/token/refresh/` : 
+            `${API_BASE_URL}/api/auth/token/refresh/`;
+          const response = await axios.post(refreshUrl, { refresh: refreshToken });
           
           const { access } = response.data;
           setTokens(access, refreshToken);

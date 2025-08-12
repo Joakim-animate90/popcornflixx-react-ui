@@ -5,6 +5,10 @@ import { resolve } from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Expose environment variables to the client
+    'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL || ''),
+  },
   resolve: {
     alias: {
       '@api': resolve(__dirname, 'src/api'),
