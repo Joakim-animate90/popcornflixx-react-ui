@@ -13,9 +13,26 @@ const clearTokens = () => {
   localStorage.removeItem('user');
 };
 
+// Environment configuration
+const getApiBaseUrl = () => {
+  // For build-time environment variables in React
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Default fallbacks based on environment
+  if (process.env.NODE_ENV === 'production') {
+    return '/api'; // Relative URL for production (assumes same domain)
+  }
+  
+  return 'http://localhost:8000'; // Development fallback
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 // Axios API client with set configuration
 const apiClient = axios.create({
-  baseURL: `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api`,
+  baseURL: `${API_BASE_URL}/api`,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
@@ -49,7 +66,7 @@ apiClient.interceptors.response.use(
         const refreshToken = getRefreshToken();
         if (refreshToken) {
           const response = await axios.post(
-            `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/token/refresh/`,
+            `${API_BASE_URL}/api/auth/token/refresh/`,
             { refresh: refreshToken }
           );
           
